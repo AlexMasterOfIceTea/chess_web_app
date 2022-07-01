@@ -40,7 +40,7 @@ export const Game:FC = () => {
                 focus={focus}
                 possibleMoves={possibleMoves}
             />
-            <DeadPieceDisplay pieces={state.pieces.filter(p => p.dead)}/>
+            {/* <DeadPieceDisplay pieces={state.pieces.filter(p => p.dead)}/> */}
             <GameOverDialog onNewGame={resetGame}
                 reason={state.reason}
                 winner={state.winner}
