@@ -302,9 +302,8 @@ const getCastelingState = (leftCastle:boolean, {board, black, white}:Pick<GameSt
 }
 
 export const move:(state:GameState, validMove:GameMove) => GameState 
-    = ({board, positionCount, move50Count, enPassantSquare, turn, white, black, pieces}, validMove) => {
-    const color = getColor(board[flatten(validMove.from)]);
-    const opp = oppColor(color);
+    = ({board, positionCount, move50Count, enPassantSquare, turn, white, black}, validMove) => {
+    const opp = oppColor(turn);
     const piece = board[flatten(validMove.from)];
 
     const newBoard = getNewBoard(board, validMove);
@@ -312,11 +311,11 @@ export const move:(state:GameState, validMove:GameMove) => GameState
 
     console.log(newPieces);
 
-    const player = color === WHITE ? white : black;
+    const player = {
+        canCastleLeft: getCastelingState(true, {black, white, board}, validMove),
+        canCastleRight: getCastelingState(false, {board, black, white}, validMove)
+    }
     
-    player.canCastleLeft = getCastelingState(true, {black, white, board}, validMove);
-    player.canCastleRight = getCastelingState(false, {board, black, white}, validMove);
-
     const [newPositionCount, hash] = getNewPositionCount(positionCount, newBoard, turn, enPassantSquare, player.canCastleLeft, player.canCastleRight);
     const newMove50Count = getMove50Count(move50Count, piece, validMove.deadPiece);
 
@@ -324,8 +323,8 @@ export const move:(state:GameState, validMove:GameMove) => GameState
         lastMoveTs: Date.now(),
         enPassantSquare: validMove?.enPassantSquare,
         pieces: newPieces,
-        white: color === WHITE ? player : white, 
-        black: color === BLACK ? player : black, 
+        white: turn === WHITE ? {...white, ...player} : white, 
+        black: turn === BLACK ? {...black, ...player} : black, 
         positionCount: newPositionCount,
         move50Count: newMove50Count,
         board: newBoard, 
@@ -335,7 +334,7 @@ export const move:(state:GameState, validMove:GameMove) => GameState
 
     if(isCheck(newBoard, opp)){
         if(isStalemate(newState, opp))
-            return {...newState, winner: color, reason: "Checkmate"} as GameState;
+            return {...newState, winner: turn, reason: "Checkmate"} as GameState;
         return {...newState, check: true} as GameState;
     }
     if(isStalemate(newState, opp)){
